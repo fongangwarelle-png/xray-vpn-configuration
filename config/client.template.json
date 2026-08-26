@@ -1,0 +1,102 @@
+{
+  "log": {
+    "loglevel": "warning"
+  },
+  "dns": {
+    "servers": [
+      "1.1.1.1"
+    ]
+  },
+  "inbounds": [
+    {
+      "listen": "0.0.0.0",
+      "port": "1080",
+      "protocol": "dokodemo-door",
+      "settings": {
+        "network": "tcp",
+        "followRedirect": true
+      },
+      "tag": "tun-inbound"
+    },
+    {
+      "listen": "127.0.0.1",
+      "port": "10808",
+      "protocol": "socks",
+      "settings": {
+        "auth": "noauth",
+        "udp": true
+      },
+      "tag": "socks-inbound"
+    }
+  ],
+  "outbounds": [
+    {
+      "mux": {
+        "enabled": false
+      },
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "VOTRE_DOMAINE",
+            "port": 8080,
+            "users": [
+              {
+                "id": "VOTRE_UUID_ICI",
+                "encryption": "none",
+                "level": 8
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "ws",
+        "security": "tls",
+        "tlsSettings": {
+          "allowInsecure": false,
+          "serverName": "VOTRE_DOMAINE",
+          "fingerprint": "firefox"
+        },
+        "wsSettings": {
+          "path": "/VOTRE_PATH",
+          "headers": {
+            "Host": "VOTRE_DOMAINE"
+          }
+        }
+      },
+      "tag": "VLESS"
+    },
+    {
+      "protocol": "freedom",
+      "tag": "direct"
+    },
+    {
+      "protocol": "blackhole",
+      "tag": "block"
+    }
+  ],
+  "routing": {
+    "domainStrategy": "AsIs",
+    "rules": [
+      {
+        "type": "field",
+        "protocol": ["dns"],
+        "outboundTag": "direct"
+      },
+      {
+        "type": "field",
+        "inboundTag": ["tun-inbound", "socks-inbound"],
+        "outboundTag": "VLESS"
+      }
+    ]
+  },
+  "policy": {
+    "levels": {
+      "8": {
+        "connIdle": 300,
+        "handshake": 4
+      }
+    }
+  }
+}
